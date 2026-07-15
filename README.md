@@ -38,3 +38,11 @@ node scripts/test_import_export.mjs
 | `docs/` | 设计规格与实现计划 |
 
 空白 Markdown 模板见仓库根目录 `*.md`（不含已填个人信息的 Word 原件）。
+
+
+## 安装为 App（PWA）
+
+- **Android Chrome**：打开站点 → 菜单 →「安装应用」或「添加到主屏幕」
+- **iPhone Safari**：分享 →「添加到主屏幕」
+- 首次需联网加载并缓存；之后可离线打开填写（答案仍在本机）
+- 双机合并仍用 JSON 导出/导入（或隔空投送文件）

@@ -57,3 +57,11 @@ python scripts/build_other_forms.py       # 其余表单
 ```
 
 注册表：`web/data/forms.json`（增表单改这里 + 加 `web/data/forms/<id>.json`）。
+
+
+## 安装为 App（PWA）
+
+- **Android Chrome**：打开站点 → 菜单 →「安装应用」或「添加到主屏幕」
+- **iPhone Safari**：分享 →「添加到主屏幕」
+- 首次需联网加载并缓存；之后可离线打开填写（答案仍在本机）
+- 双机合并仍用 JSON 导出/导入（或隔空投送文件）

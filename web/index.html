@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>婚前辅导表单</title>
   <link rel="stylesheet" href="css/app.css" />
+  <meta name="theme-color" content="#2f5d50" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
 </head>
 <body>
   <div class="wrap">
@@ -15,7 +20,7 @@
       </nav>
     </div>
     <div class="note">
-      数据仅保存在本机浏览器。点选表单分别填写与对照；可一键导出全部备份。
+      数据仅保存在本机浏览器，可离线使用。手机浏览器可「添加到主屏幕」当 App 用；点选表单填写与对照，支持导入导出。
     </div>
     <div id="error" class="error" hidden></div>
 
@@ -32,6 +37,7 @@
 
     <div id="form-list"></div>
   </div>
+  <script src="js/pwa.js"></script>
   <script type="module" src="js/home.js"></script>
 </body>
 </html>
