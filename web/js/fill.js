@@ -57,6 +57,42 @@ async function main() {
   const defaultLikertLabels =
     bank.scale?.labels || ["非常同意", "同意", "中立", "不同意", "非常不同意"];
 
+  function scaleLegendHtml(kind) {
+    if (kind === "choice") {
+      // use first choice item options if any
+      for (const ch of bank.chapters) {
+        for (const it of ch.items) {
+          if (it.type === "choice" && it.options?.length) {
+            const parts = it.options.map((o) => `${o.value}=${o.label}`);
+            return `选项含义：${parts.join("　")}`;
+          }
+        }
+      }
+      return "选项含义：见各题下方说明";
+    }
+    // likert
+    const parts = defaultLikertLabels.map((lab, i) => `${i + 1}=${lab}`);
+    return `程度含义：${parts.join("　")}`;
+  }
+
+  function updateScaleLegend() {
+    const el = $("scale-legend");
+    if (!el) return;
+    const ch = bank.chapters[chapterIndex];
+    const hasLikert = ch.items.some((it) => it.type === "likert");
+    const hasChoice = ch.items.some((it) => it.type === "choice");
+    const lines = [];
+    if (hasLikert) lines.push(scaleLegendHtml("likert"));
+    if (hasChoice) lines.push(scaleLegendHtml("choice"));
+    if (!lines.length) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML = lines.map((x) => `<div>${x}</div>`).join("");
+  }
+
   $("title").textContent = `${meta.short || meta.title} · ${
     state.people[person].displayName || (person === "a" ? "丈夫" : "妻子")
   }`;
@@ -137,7 +173,11 @@ async function main() {
     for (const opt of options) {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = opt.label;
+      btn.className = "scale-btn";
+      const meaning = opt.hint || opt.label;
+      btn.title = `${opt.value}：${meaning}`;
+      btn.setAttribute("aria-label", `${opt.value} ${meaning}`);
+      btn.innerHTML = `<span class="scale-num">${opt.value}</span><span class="scale-mean">${meaning}</span>`;
       if (cur === opt.value) btn.classList.add("selected");
       btn.addEventListener("click", () => {
         state = setAnswer(state, person, it.id, opt.value, it.type);
@@ -203,6 +243,7 @@ async function main() {
   const render = () => {
     renderNav();
     renderItems();
+    updateScaleLegend();
     $("prev").disabled = chapterIndex <= 0;
     $("next").textContent =
       chapterIndex >= bank.chapters.length - 1

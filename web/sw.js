@@ -1,5 +1,5 @@
 /* Offline cache for premarital forms PWA */
-const CACHE = "premarital-forms-v1";
+const CACHE = "premarital-forms-v2";
 const ASSETS = [
   "./",
   "./index.html",
