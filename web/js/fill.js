@@ -9,11 +9,29 @@ import {
   saveState,
   setAnswer,
 } from "./storage.js";
+import { loadForm, offlineHref, rewireHomeLinks, isOfflinePack } from "./data-loader.js";
 
-const $ = (id) => document.getElementById(id);
+function pageRoot() {
+  if (typeof isOfflinePack === "function" && isOfflinePack()) {
+    if (location.hash.startsWith("#/fill")) return document.getElementById("view-fill") || document;
+    if (location.hash.startsWith("#/compare")) return document.getElementById("view-compare") || document;
+    return document.getElementById("view-home") || document;
+  }
+  return document;
+}
+const $ = (id) => {
+  const root = pageRoot();
+  return (root.querySelector && root.querySelector("#" + id)) || document.getElementById(id);
+};
 
 function qs() {
-  const u = new URLSearchParams(location.search);
+  let search = location.search;
+  if (location.hash.includes("?")) {
+    search = "?" + location.hash.split("?")[1];
+  } else if (location.hash.startsWith("#/fill")) {
+    search = "";
+  }
+  const u = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
   const form = u.get("form") || "assessment";
   const person = u.get("person") === "b" ? "b" : "a";
   return { form, person };
@@ -31,18 +49,11 @@ function showError(msg) {
 }
 
 async function loadCatalogForm(formId) {
-  const res = await fetch("data/forms.json");
-  if (!res.ok) throw new Error("forms.json");
-  const catalog = await res.json();
-  const meta = catalog.forms.find((f) => f.id === formId);
-  if (!meta) throw new Error("未知表单: " + formId);
-  const bankRes = await fetch(`data/${meta.file}`);
-  if (!bankRes.ok) throw new Error(meta.file);
-  const bank = await bankRes.json();
-  return { meta, bank };
+  return loadForm(formId);
 }
 
 async function main() {
+  rewireHomeLinks();
   const { form: formId, person } = qs();
   let meta, bank;
   try {
@@ -96,7 +107,7 @@ async function main() {
   $("title").textContent = `${meta.short || meta.title} · ${
     state.people[person].displayName || (person === "a" ? "丈夫" : "妻子")
   }`;
-  $("link-compare").href = `compare.html?form=${encodeURIComponent(formId)}`;
+  $("link-compare").href = offlineHref("compare", { form: formId });
   $("link-compare").hidden = meta.compare === false;
 
   $("btn-export-form").addEventListener("click", () => {
@@ -262,8 +273,8 @@ async function main() {
   });
   $("next").addEventListener("click", () => {
     if (chapterIndex >= bank.chapters.length - 1) {
-      if (meta.compare === false) location.href = "index.html";
-      else location.href = `compare.html?form=${encodeURIComponent(formId)}`;
+      if (meta.compare === false) location.href = offlineHref("home");
+      else location.href = offlineHref("compare", { form: formId });
       return;
     }
     chapterIndex++;

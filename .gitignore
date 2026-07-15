@@ -17,3 +17,7 @@ _extract/
 _extract_preview/
 _prep/
 _build_md.py
+
+__pycache__/
+*.pyc
+

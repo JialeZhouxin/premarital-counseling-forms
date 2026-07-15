@@ -7,8 +7,20 @@ import {
   parseImport,
   saveRoot,
 } from "./storage.js";
+import { loadForm, offlineHref, rewireHomeLinks, isOfflinePack } from "./data-loader.js";
 
-const $ = (id) => document.getElementById(id);
+function pageRoot() {
+  if (typeof isOfflinePack === "function" && isOfflinePack()) {
+    if (location.hash.startsWith("#/fill")) return document.getElementById("view-fill") || document;
+    if (location.hash.startsWith("#/compare")) return document.getElementById("view-compare") || document;
+    return document.getElementById("view-home") || document;
+  }
+  return document;
+}
+const $ = (id) => {
+  const root = pageRoot();
+  return (root.querySelector && root.querySelector("#" + id)) || document.getElementById(id);
+};
 
 function showError(msg) {
   const el = $("error");
@@ -26,18 +38,13 @@ function tagLabel(kind) {
 }
 
 function formId() {
-  return new URLSearchParams(location.search).get("form") || "assessment";
+  let search = location.search;
+  if (location.hash.includes("?")) search = "?" + location.hash.split("?")[1];
+  return new URLSearchParams(search.startsWith("?") ? search.slice(1) : search).get("form") || "assessment";
 }
 
 async function loadCatalogForm(id) {
-  const res = await fetch("data/forms.json");
-  if (!res.ok) throw new Error("forms.json");
-  const catalog = await res.json();
-  const meta = catalog.forms.find((f) => f.id === id);
-  if (!meta) throw new Error("未知表单");
-  const bankRes = await fetch(`data/${meta.file}`);
-  if (!bankRes.ok) throw new Error(meta.file);
-  return { meta, bank: await bankRes.json() };
+  return loadForm(id);
 }
 
 function labelValue(it, v, bank) {
@@ -50,6 +57,7 @@ function labelValue(it, v, bank) {
 }
 
 async function main() {
+  rewireHomeLinks();
   const fid = formId();
   let meta, bank;
   try {
@@ -60,8 +68,8 @@ async function main() {
   }
 
   $("page-title").textContent = `对照 · ${meta.title}`;
-  $("link-fill-a").href = `fill.html?form=${encodeURIComponent(fid)}&person=a`;
-  $("link-fill-b").href = `fill.html?form=${encodeURIComponent(fid)}&person=b`;
+  $("link-fill-a").href = offlineHref("fill", { form: fid, person: "a" });
+  $("link-fill-b").href = offlineHref("fill", { form: fid, person: "b" });
 
   $("btn-export-form").addEventListener("click", () => {
     exportOneForm(fid, loadState(fid));
@@ -123,7 +131,7 @@ async function main() {
   };
 
   const currentFilter = () =>
-    document.querySelector('input[name="filter"]:checked')?.value || "diff_only";
+    pageRoot().querySelector('input[name="filter"]:checked')?.value || "diff_only";
 
   const renderList = () => {
     if (!scoreItems.length) return;
@@ -183,7 +191,7 @@ async function main() {
     }
   };
 
-  document.querySelectorAll('input[name="filter"]').forEach((el) => {
+  pageRoot().querySelectorAll('input[name="filter"]').forEach((el) => {
     el.addEventListener("change", renderList);
   });
 

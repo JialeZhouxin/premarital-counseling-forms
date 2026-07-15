@@ -65,3 +65,11 @@ python scripts/build_other_forms.py       # 其余表单
 - **iPhone Safari**：分享 →「添加到主屏幕」
 - 首次需联网加载并缓存；之后可离线打开填写（答案仍在本机）
 - 双机合并仍用 JSON 导出/导入（或隔空投送文件）
+
+
+## 离线单文件包
+
+- 文件：`web/premarital-counseling-offline.html`（也可在站点首页点「下载离线单文件」）
+- 用法：把该 HTML 发给朋友 / 存到手机 → **直接用浏览器打开**，无需服务器、无需联网
+- 重建：`python scripts/build_offline_html.py`（输出 `dist/` 并请复制到 `web/`）
+- 答案仍在本机；双机对照继续用 JSON 导入导出

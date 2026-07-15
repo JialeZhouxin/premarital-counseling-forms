@@ -8,8 +8,20 @@ import {
   progress,
   saveRoot,
 } from "./storage.js";
+import { loadBankByFile, loadCatalog, offlineHref, rewireHomeLinks, isOfflinePack } from "./data-loader.js";
 
-const $ = (id) => document.getElementById(id);
+function pageRoot() {
+  if (typeof isOfflinePack === "function" && isOfflinePack()) {
+    if (location.hash.startsWith("#/fill")) return document.getElementById("view-fill") || document;
+    if (location.hash.startsWith("#/compare")) return document.getElementById("view-compare") || document;
+    return document.getElementById("view-home") || document;
+  }
+  return document;
+}
+const $ = (id) => {
+  const root = pageRoot();
+  return (root.querySelector && root.querySelector("#" + id)) || document.getElementById(id);
+};
 
 function showError(msg) {
   const el = $("error");
@@ -32,9 +44,7 @@ function fmtProg(p) {
 }
 
 async function loadBank(file) {
-  const res = await fetch(`data/${file}`);
-  if (!res.ok) throw new Error(file);
-  return res.json();
+  return loadBankByFile(file);
 }
 
 async function importInto(formId, file, title) {
@@ -54,13 +64,12 @@ async function importInto(formId, file, title) {
 }
 
 async function main() {
+  rewireHomeLinks();
   let catalog;
   try {
-    const res = await fetch("data/forms.json");
-    if (!res.ok) throw new Error("forms.json");
-    catalog = await res.json();
+    catalog = await loadCatalog();
   } catch {
-    showError("表单目录加载失败，请用本地服务器打开 web/。");
+    showError("表单目录加载失败。网页版请用本地服务器打开 web/；或使用离线单文件包。");
     return;
   }
 
@@ -91,11 +100,11 @@ async function main() {
       <p class="progress" style="margin:12px 0 6px">丈夫：${fmtProg(prog.a)}</p>
       <p class="progress" style="margin:0 0 12px">妻子：${fmtProg(prog.b)}</p>
       <div class="row">
-        <a class="btn primary" href="fill.html?form=${encodeURIComponent(form.id)}&person=a">填 · 丈夫</a>
-        <a class="btn primary" href="fill.html?form=${encodeURIComponent(form.id)}&person=b">填 · 妻子</a>
+        <a class="btn primary" href="${offlineHref("fill", { form: form.id, person: "a" })}">填 · 丈夫</a>
+        <a class="btn primary" href="${offlineHref("fill", { form: form.id, person: "b" })}">填 · 妻子</a>
         ${
           form.compare
-            ? `<a class="btn" href="compare.html?form=${encodeURIComponent(form.id)}">对照</a>`
+            ? `<a class="btn" href="${offlineHref("compare", { form: form.id })}">对照</a>`
             : ""
         }
         <button class="btn" type="button" data-export="${form.id}">导出本表</button>
