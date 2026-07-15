@@ -1,0 +1,19 @@
+# Word originals may contain filled personal data — do not publish
+*.doc
+*.docx
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Reasonix / local
+.reasonix/
+
+# Temp extract
+_extract/
+_extract_preview/
+_prep/
+_build_md.py

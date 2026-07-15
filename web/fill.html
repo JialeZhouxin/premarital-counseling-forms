@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>填写 · 婚前辅导</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1 id="title">填写</h1>
+      <nav>
+        <a href="index.html">全部表单</a>
+        <a href="compare.html" id="link-compare">对照</a>
+      </nav>
+    </div>
+    <div class="note">自动保存到本机。量表/选择题点选；开放题直接输入。</div>
+    <div id="error" class="error" hidden></div>
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn" id="btn-export-form" type="button">导出本表</button>
+        <label class="btn" for="file-import-form">导入本表</label>
+        <input id="file-import-form" type="file" accept="application/json,.json" hidden />
+      </div>
+      <div class="row" style="justify-content:space-between">
+        <div id="chapter-title" class="muted"></div>
+        <div id="chapter-progress" class="progress"></div>
+      </div>
+      <div class="chapter-nav" id="chapters-nav"></div>
+      <div id="items"></div>
+      <div class="pager">
+        <button class="btn" id="prev" type="button">上一章</button>
+        <button class="btn primary" id="next" type="button">下一章</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="js/fill.js"></script>
+</body>
+</html>
