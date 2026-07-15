@@ -171,6 +171,77 @@ textarea {
   .scale-labels { font-size: 10px; }
 }
 
+
+/* ---- print report ---- */
+.print-report-meta { display: none; }
+.print-footer { display: none; }
+@media print {
+  @page { margin: 12mm; }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12pt;
+    line-height: 1.45;
+  }
+  .no-print,
+  nav,
+  .btn,
+  script { display: none !important; }
+  .wrap { max-width: none; margin: 0; padding: 0; }
+  .card {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0 0 14px;
+    break-inside: avoid;
+  }
+  .note { display: none !important; }
+  .print-report-meta {
+    display: block !important;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #222;
+  }
+  .print-title {
+    font-size: 18pt;
+    margin: 0 0 8px;
+  }
+  .print-report-meta p { margin: 4px 0; }
+  .summary { margin: 8px 0 12px; }
+  .pill, .tag {
+    border: 1px solid #444 !important;
+    color: #000 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .tag.match, .pill.match { background: #d9f2e3 !important; }
+  .tag.near, .pill.near { background: #fff3cd !important; }
+  .tag.far, .pill.far { background: #f8d7da !important; }
+  .compare-row {
+    grid-template-columns: 1.4fr 1fr 1fr auto;
+    border-top: 1px solid #ccc;
+    padding: 8px 0;
+    break-inside: avoid;
+  }
+  .open-grid { grid-template-columns: 1fr 1fr; }
+  .open-box {
+    background: #fff !important;
+    border: 1px solid #999;
+    min-height: 36px;
+  }
+  .print-hide { display: none !important; }
+  .print-footer {
+    display: block !important;
+    margin-top: 18px;
+    padding-top: 10px;
+    border-top: 1px solid #666;
+    font-size: 10pt;
+    color: #333;
+  }
+  a { color: #000; text-decoration: none; }
+}
+
   .offline-banner {
     background: #e8f0ff; border: 1px solid #b7c9ef; color: #1e2f5c;
     padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px;
@@ -241,7 +312,7 @@ textarea {
     </div>
   </div></div>
   <div id="view-compare" hidden><div class="wrap">
-    <div class="top">
+    <div class="top no-print">
       <h1 id="page-title">双方对照</h1>
       <nav>
         <a href="index.html">全部表单</a>
@@ -249,28 +320,37 @@ textarea {
         <a href="fill.html?person=b" id="link-fill-b">填妻子</a>
       </nav>
     </div>
-    <div class="note">绿=一致 · 黄=差1 · 红=差≥2（量表/选择题）。开放题仅并排。</div>
+    <div class="note no-print">绿=一致 · 黄=差1 · 红=差≥2（量表/选择题）。开放题仅并排。</div>
     <div id="error" class="error" hidden></div>
 
     <div class="card">
-      <div class="row" style="margin-bottom:10px">
+      <div class="row no-print" style="margin-bottom:10px">
         <button class="btn" id="btn-export-form" type="button">导出本表</button>
         <label class="btn" for="file-import-form">导入本表</label>
         <input id="file-import-form" type="file" accept="application/json,.json" hidden />
+        <button class="btn primary" id="btn-print-report" type="button">打印报告</button>
       </div>
+      <div class="print-report-meta" id="print-meta" hidden></div>
       <div class="summary" id="summary"></div>
-      <div class="filters" id="filters">
+      <div class="filters no-print" id="filters">
         <label><input type="radio" name="filter" value="all_answered" /> 全部已填</label>
         <label><input type="radio" name="filter" value="diff_only" checked /> 仅差异</label>
         <label><input type="radio" name="filter" value="far_only" /> 仅红（差≥2）</label>
       </div>
+      <p class="muted no-print" id="print-hint">打印默认按当前筛选（默认「仅差异」）；可勾选是否含开放题。</p>
+      <div class="row no-print" style="margin-bottom:10px">
+        <label><input type="checkbox" id="print-include-open" checked /> 打印含开放题</label>
+      </div>
       <div id="list"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="open-section">
       <h2>开放题并排</h2>
-      <p class="muted">不做语义对比，仅并排查看。</p>
+      <p class="muted no-print">不做语义对比，仅并排查看。</p>
       <div id="open-list"></div>
+    </div>
+    <div class="print-footer" id="print-footer" hidden>
+      隐私提示：本报告仅供婚前辅导使用，请勿外传；打印件请自行妥善保管或销毁。
     </div>
   </div></div>
   <script>
@@ -1341,6 +1421,42 @@ async function bootCompare() {
 
   pageRoot().querySelectorAll('input[name="filter"]').forEach((el) => {
     el.addEventListener("change", renderList);
+  });
+
+  const filterLabel = () => {
+    const v = currentFilter();
+    return {
+      all_answered: "全部已填",
+      diff_only: "仅差异",
+      far_only: "仅红（差≥2）",
+    }[v] || v;
+  };
+
+  const fillPrintMeta = () => {
+    const metaEl = $("print-meta");
+    const foot = $("print-footer");
+    if (!metaEl) return;
+    const when = new Date();
+    const stamp = `${when.getFullYear()}-${String(when.getMonth() + 1).padStart(2, "0")}-${String(when.getDate()).padStart(2, "0")}`;
+    metaEl.hidden = false;
+    metaEl.innerHTML = `
+      <h1 class="print-title">婚前辅导对照报告</h1>
+      <p><strong>表单：</strong>${meta.title}</p>
+      <p><strong>双方：</strong>${nameA} / ${nameB}</p>
+      <p><strong>筛选：</strong>${filterLabel()} · 一致 ${stats.match} · 差1 ${stats.near} · 差≥2 ${stats.far} · 未齐 ${stats.missing}</p>
+      <p><strong>打印日期：</strong>${stamp}</p>
+    `;
+    if (foot) foot.hidden = false;
+  };
+
+  $("btn-print-report")?.addEventListener("click", () => {
+    const includeOpen = $("print-include-open")?.checked !== false;
+    const openSec = $("open-section");
+    if (openSec) openSec.classList.toggle("print-hide", !includeOpen);
+    fillPrintMeta();
+    // ensure list matches current filter (default diff_only)
+    renderList();
+    window.print();
   });
 
   renderSummary();

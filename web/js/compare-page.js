@@ -195,6 +195,42 @@ async function main() {
     el.addEventListener("change", renderList);
   });
 
+  const filterLabel = () => {
+    const v = currentFilter();
+    return {
+      all_answered: "全部已填",
+      diff_only: "仅差异",
+      far_only: "仅红（差≥2）",
+    }[v] || v;
+  };
+
+  const fillPrintMeta = () => {
+    const metaEl = $("print-meta");
+    const foot = $("print-footer");
+    if (!metaEl) return;
+    const when = new Date();
+    const stamp = `${when.getFullYear()}-${String(when.getMonth() + 1).padStart(2, "0")}-${String(when.getDate()).padStart(2, "0")}`;
+    metaEl.hidden = false;
+    metaEl.innerHTML = `
+      <h1 class="print-title">婚前辅导对照报告</h1>
+      <p><strong>表单：</strong>${meta.title}</p>
+      <p><strong>双方：</strong>${nameA} / ${nameB}</p>
+      <p><strong>筛选：</strong>${filterLabel()} · 一致 ${stats.match} · 差1 ${stats.near} · 差≥2 ${stats.far} · 未齐 ${stats.missing}</p>
+      <p><strong>打印日期：</strong>${stamp}</p>
+    `;
+    if (foot) foot.hidden = false;
+  };
+
+  $("btn-print-report")?.addEventListener("click", () => {
+    const includeOpen = $("print-include-open")?.checked !== false;
+    const openSec = $("open-section");
+    if (openSec) openSec.classList.toggle("print-hide", !includeOpen);
+    fillPrintMeta();
+    // ensure list matches current filter (default diff_only)
+    renderList();
+    window.print();
+  });
+
   renderSummary();
   renderList();
   renderOpen();
