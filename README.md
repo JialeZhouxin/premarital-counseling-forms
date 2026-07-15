@@ -5,7 +5,7 @@
 
 ## 在线访问
 
-部署后见仓库 GitHub Pages 地址（Settings → Pages，或本 README 更新后的链接）。
+https://jialezhouxin.github.io/premarital-counseling-forms/
 
 ## 本地运行
 
